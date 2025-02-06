@@ -23,3 +23,8 @@ mainframe = Frame()
 
 def init_grid():
     background = Frame(bg=GRID_BG_COLOR, width=SIZE, height=SIZE)
+    background.grid()
+    mainloop()
+
+
+init_grid()
