@@ -1,6 +1,6 @@
+
 import random
 from tkinter import *
-import random
 
 SIZE = 400
 GRID_LEN = 4
@@ -21,6 +21,21 @@ KEY_RIGHT = "d"
 matrix = []
 grid_cells = []
 mainframe = Frame()
+
+
+def init_grid():
+    background = Frame(bg=BACKGROUND_COLOR_GAME, width=SIZE, height=SIZE)
+    background.grid()
+    for i in range(GRID_LEN):
+        grid_row = []
+        for j in range(GRID_LEN):
+            cell = Frame(background, bg=BACKGROUND_COLOR_CELL_EMPTY, width=SIZE / GRID_LEN, height=SIZE / GRID_LEN)
+            cell.grid(row=i, column=j, padx=GRID_PADDING, pady=GRID_PADDING)
+            t = Label(master=cell, text="", bg=BACKGROUND_COLOR_CELL_EMPTY, justify=CENTER, font=FONT, width=5,
+                      height=2)
+            t.grid()
+            grid_row.append(t)
+        grid_cells.append(grid_row)
 
 
 def init_matrix():
@@ -49,21 +64,6 @@ def update_grid_cell():
                                            fg=CELL_COLOR_DICT[matrix[i][j]])
 
 
-def init_grid():
-    background = Frame(bg=BACKGROUND_COLOR_GAME, width=SIZE, height=SIZE)
-    background.grid()
-    for i in range(GRID_LEN):
-        grid_row = []
-        for j in range(GRID_LEN):
-            cell = Frame(background, bg=BACKGROUND_COLOR_CELL_EMPTY, width=SIZE / GRID_LEN, height=SIZE / GRID_LEN)
-            cell.grid(row=i, column=j, padx=GRID_PADDING, pady=GRID_PADDING)
-            t = Label(master=cell, text="", bg=BACKGROUND_COLOR_CELL_EMPTY, justify=CENTER, font=FONT, width=5,
-                      height=2)
-            t.grid()
-            grid_row.append(t)
-        grid_cells.append(grid_row)
-
-
 def cover_up(mat):
     new = []
     for i in range(len(mat)):
@@ -77,12 +77,97 @@ def cover_up(mat):
                 if j != count:
                     done = True
                 count += 1
-    return new, done
+    return (new, done)
 
+
+def merge(mat):
+    done = False
+    for i in range(len(mat)):
+        for j in range(len(mat) - 1):
+            if mat[i][j] == mat[i][j + 1] and mat[i][j] != 0:
+                mat[i][j] *= 2
+                mat[i][j+1] = 0
+                done = True
+    return mat, done
+
+
+def reverse(mat):
+    new = []
+    for i in range(len(mat)):
+        new.append([])
+        for j in range(len(mat)):
+            new[i].append(mat[i][len(mat[0])-j-1]) # HW
+    return new
+
+
+def transpose(mat):
+    new = []
+    for i in range(len(mat)[0]):
+        new.append([])
+        for j in range(len(mat)):
+            new[i].append(mat[j][i])
+    return new
+
+
+def left():
+    global matrix
+    matrix, done = cover_up(matrix)
+    temp = merge(matrix)
+    matrix = temp[0]
+    done = done or temp[1]
+    matrix = cover_up(matrix)[0]
+    return done
+
+
+def right():
+    global matrix
+    matrix = reverse(matrix)
+    matrix, done = cover_up(matrix)
+    temp = merge(matrix)
+    matrix = temp[0]
+    done = done or temp[1]
+    matrix = cover_up(matrix)[0]
+    return done
+
+
+def up():
+    global matrix
+    matrix = transpose(matrix)
+    matrix, done = cover_up(matrix)
+    temp = merge(matrix)
+    matrix = temp[0]
+    done = done or temp[1]
+    matrix = cover_up(matrix)[0]
+    matrix = transpose(matrix)
+    return done
+
+
+def down():
+    global matrix
+    matrix = reverse(transpose(matrix))
+    matrix, done = cover_up(matrix)
+    temp = merge(matrix)
+    matrix = temp[0]
+    done = done or temp[1]
+    matrix = cover_up(matrix)[0]
+    matrix = reverse(transpose(matrix))
+    return done
+
+
+def key_down(even):
+    key = repr(even.char)
+    if key in mainframe.commands:
+        done = mainframe.commands[repr(even.char)]()
+        if done:
+            add_two()
+            update_grid_cell()
 
 def main():
+    mainframe.master.title('2048')
+    mainframe.master.bind('<Key>', key_down)
+    mainframe.commands = {KEY_UP:up, KEY_DOWN:down, KEY_LEFT:left, KEY_RIGHT:right}
     init_grid()
-    init_matrix()
+    print(init_matrix())
     mainloop()
 
 
